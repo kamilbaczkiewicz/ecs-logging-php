@@ -431,8 +431,9 @@ class ElasticCommonSchemaFormatterTest extends BaseTestCase
 
         if ($useLogOriginFromContext) {
             $testHelper->expectedAdditionalLogKeys = ['origin'];
+            $testHelper->expectedAdditionalTopLevelKeys = ['callType'];
         } else {
-            $testHelper->expectedAdditionalTopLevelKeys = ['file', 'line', 'class', 'function'];
+            $testHelper->expectedAdditionalTopLevelKeys = ['file', 'line', 'class', 'callType', 'function'];
         }
 
         $logOrigin = [];
