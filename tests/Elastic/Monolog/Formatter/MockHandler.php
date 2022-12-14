@@ -11,13 +11,14 @@ declare(strict_types=1);
 namespace Elastic\Tests\Monolog\Formatter;
 
 use Monolog\Handler\AbstractProcessingHandler;
+use Monolog\LogRecord;
 
 class MockHandler extends AbstractProcessingHandler
 {
-    /** @var array<array> */
+    /** @var LogRecord[] */
     public $records = [];
 
-    protected function write(array $record): void
+    protected function write(LogRecord $record): void
     {
         $this->records[] = $record;
     }

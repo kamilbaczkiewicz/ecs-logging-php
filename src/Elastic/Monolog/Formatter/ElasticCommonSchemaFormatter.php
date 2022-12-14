@@ -10,6 +10,7 @@ namespace Elastic\Monolog\Formatter;
 
 use Elastic\Types\Error as EcsError;
 use Monolog\Formatter\NormalizerFormatter;
+use Monolog\LogRecord;
 use Throwable;
 
 /**
@@ -55,7 +56,7 @@ class ElasticCommonSchemaFormatter extends NormalizerFormatter
     }
 
     /** @inheritDoc */
-    protected function normalize($data, int $depth = 0)
+    protected function normalize(mixed $data, int $depth = 0): mixed
     {
         if ($depth > $this->maxNormalizeDepth) {
             return parent::normalize($data, $depth);
@@ -69,6 +70,9 @@ class ElasticCommonSchemaFormatter extends NormalizerFormatter
             return $data->jsonSerialize();
         }
 
+        if ($data instanceof LogRecord) {
+            return parent::normalize($data->toArray(), $depth);
+        }
         return parent::normalize($data, $depth);
     }
 
@@ -79,7 +83,7 @@ class ElasticCommonSchemaFormatter extends NormalizerFormatter
      * @link https://www.elastic.co/guide/en/ecs/1.1/ecs-base.html
      * @link https://www.elastic.co/guide/en/ecs/current/ecs-tracing.html
      */
-    public function format(array $record): string
+    public function format(LogRecord $record): string
     {
         $inRecord = $this->normalize($record);
 

@@ -16,7 +16,9 @@ use Elastic\Monolog\Formatter\ElasticCommonSchemaFormatter;
 use Elastic\Tests\BaseTestCase;
 use Elastic\Tests\HelperForMonolog;
 use Elastic\Types\{Error, Service, Tracing, User};
+use Monolog\Level;
 use Monolog\Logger;
+use Monolog\LogRecord;
 use Monolog\Processor\IntrospectionProcessor;
 use Monolog\Processor\TagProcessor;
 use Throwable;
@@ -39,15 +41,7 @@ class ElasticCommonSchemaFormatterTest extends BaseTestCase
      */
     public function testFormat()
     {
-        $msg = [
-            'level'      => Logger::INFO,
-            'level_name' => 'INFO',
-            'channel'    => 'ecs',
-            'datetime'   => new DateTimeImmutable("@0"),
-            'message'    => md5(uniqid()),
-            'context'    => [],
-            'extra'      => [],
-        ];
+        $msg = new LogRecord(new \DateTimeImmutable("@0"), 'ecs', Level::Info, md5(uniqid()), [], []);
 
         $formatter = new ElasticCommonSchemaFormatter();
         $doc = $formatter->format($msg);
@@ -79,15 +73,15 @@ class ElasticCommonSchemaFormatterTest extends BaseTestCase
 
     public function testTimezone()
     {
-        $msg = [
-            'level'      => Logger::INFO,
-            'level_name' => 'INFO',
-            'channel'    => 'ecs',
-            'datetime'   => new DateTimeImmutable('2013-11-28T12:34:56.98765', new DateTimeZone('-03:45')),
-            'message'    => md5(uniqid()),
-            'context'    => [],
-            'extra'      => [],
-        ];
+
+        $msg = new LogRecord(
+            new DateTimeImmutable('2013-11-28T12:34:56.98765', new DateTimeZone('-03:45')),
+            'ecs',
+            Level::Info,
+            md5(uniqid()),
+            [],
+            []
+        );
 
         $formatter = new ElasticCommonSchemaFormatter();
         $doc = $formatter->format($msg);
@@ -108,15 +102,14 @@ class ElasticCommonSchemaFormatterTest extends BaseTestCase
     public function testContextWithTracing()
     {
         $tracing = new Tracing($this->generateTraceId(), $this->generateTransactionId());
-        $msg = [
-            'level'      => Logger::NOTICE,
-            'level_name' => 'NOTICE',
-            'channel'    => 'ecs',
-            'datetime'   => new DateTimeImmutable("@0"),
-            'message'    => md5(uniqid()),
-            'context'    => ['tracing' => $tracing],
-            'extra'      => [],
-        ];
+        $msg = new LogRecord(
+            new DateTimeImmutable('@0'),
+            'ecs',
+            Level::Notice,
+            md5(uniqid()),
+            ['tracing' => $tracing],
+            []
+        );
 
         $formatter = new ElasticCommonSchemaFormatter();
         $doc = $formatter->format($msg);
@@ -143,15 +136,14 @@ class ElasticCommonSchemaFormatterTest extends BaseTestCase
         $service->setId(rand(100, 999));
         $service->setName('funky-service-01');
 
-        $msg = [
-            'level'      => Logger::NOTICE,
-            'level_name' => 'NOTICE',
-            'channel'    => 'ecs',
-            'datetime'   => new DateTimeImmutable("@0"),
-            'message'    => md5(uniqid()),
-            'context'    => ['service' => $service],
-            'extra'      => [],
-        ];
+        $msg = new LogRecord(
+            new DateTimeImmutable('@0'),
+            'ecs',
+            Level::Notice,
+            md5(uniqid()),
+            ['service' => $service],
+            []
+        );
 
         $formatter = new ElasticCommonSchemaFormatter();
         $doc = $formatter->format($msg);
@@ -177,15 +169,14 @@ class ElasticCommonSchemaFormatterTest extends BaseTestCase
         $user->setId(rand(100, 999));
         $user->setHash(md5(uniqid()));
 
-        $msg = [
-            'level'      => Logger::NOTICE,
-            'level_name' => 'NOTICE',
-            'channel'    => 'ecs',
-            'datetime'   => new DateTimeImmutable("@0"),
-            'message'    => md5(uniqid()),
-            'context'    => ['user' => $user],
-            'extra'      => [],
-        ];
+        $msg = new LogRecord(
+            new DateTimeImmutable('@0'),
+            'ecs',
+            Level::Notice,
+            md5(uniqid()),
+            ['user' => $user],
+            []
+        );
 
         $formatter = new ElasticCommonSchemaFormatter();
         $doc = $formatter->format($msg);
@@ -223,15 +214,14 @@ class ElasticCommonSchemaFormatterTest extends BaseTestCase
      */
     public function testContextWithError(Throwable $throwable, bool $shouldWrap): void
     {
-        $msg = [
-            'level'      => Logger::ERROR,
-            'level_name' => 'ERROR',
-            'channel'    => 'ecs',
-            'datetime'   => new DateTimeImmutable("@0"),
-            'message'    => md5(uniqid()),
-            'context'    => ['error' => $shouldWrap ? new Error($throwable) : $throwable],
-            'extra'      => [],
-        ];
+        $msg = new LogRecord(
+            new DateTimeImmutable('@0'),
+            'ecs',
+            Level::Error,
+            md5(uniqid()),
+            ['error' => $shouldWrap ? new Error($throwable) : $throwable],
+            []
+        );
 
         $formatter = new ElasticCommonSchemaFormatter();
         $doc = $formatter->format($msg);
@@ -265,15 +255,14 @@ class ElasticCommonSchemaFormatterTest extends BaseTestCase
      */
     public function testTags()
     {
-        $msg = [
-            'level'      => Logger::ERROR,
-            'level_name' => 'ERROR',
-            'channel'    => 'ecs',
-            'datetime'   => new DateTimeImmutable("@0"),
-            'message'    => md5(uniqid()),
-            'context'    => [],
-            'extra'      => [],
-        ];
+        $msg = new LogRecord(
+            new DateTimeImmutable('@0'),
+            'ecs',
+            Level::Error,
+            md5(uniqid()),
+            [],
+            []
+        );
 
         $tags = [
             'one',
@@ -332,15 +321,14 @@ class ElasticCommonSchemaFormatterTest extends BaseTestCase
             $inContext['top_level_' . $key] = $key;
         }
 
-        $inRecord = [
-            'level'      => Logger::NOTICE,
-            'level_name' => 'NOTICE',
-            'channel'    => 'ecs',
-            'datetime'   => new DateTimeImmutable("@0"),
-            'message'    => md5(uniqid()),
-            'context'    => $inContext,
-            'extra'      => [],
-        ];
+        $inRecord = new LogRecord(
+            new DateTimeImmutable('@0'),
+            'ecs',
+            Level::Notice,
+            md5(uniqid()),
+            $inContext,
+            []
+        );
 
         $formatter = new ElasticCommonSchemaFormatter();
         $doc = $formatter->format($inRecord);
@@ -389,7 +377,7 @@ class ElasticCommonSchemaFormatterTest extends BaseTestCase
     {
         $testHelper = new TestHelper();
         $testHelper->expectedAdditionalTopLevelKeys = ['service.name'];
-        $testHelper->expectedLogLevel = Logger::WARNING;
+        $testHelper->expectedLogLevel = Level::Warning;
 
         $decodedJson = $testHelper->run(
             function (Logger $logger) use ($testHelper) {
